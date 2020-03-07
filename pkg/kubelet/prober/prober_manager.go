@@ -18,6 +18,7 @@ package prober
 
 import (
 	"sync"
+	"strconv"
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -94,6 +95,9 @@ type manager struct {
 	// startupManager manages the results of startup probes
 	startupManager results.Manager
 
+	// downscalingManager manages the results of the downscaling probes
+	downscalingManager results.Manager
+
 	// prober executes the probe actions.
 	prober *prober
 }
@@ -103,6 +107,7 @@ func NewManager(
 	statusManager status.Manager,
 	livenessManager results.Manager,
 	startupManager results.Manager,
+	downscalingManager results.Manager,
 	runner kubecontainer.ContainerCommandRunner,
 	refManager *kubecontainer.RefManager,
 	recorder record.EventRecorder) Manager {
@@ -115,6 +120,7 @@ func NewManager(
 		readinessManager: readinessManager,
 		livenessManager:  livenessManager,
 		startupManager:   startupManager,
+		downscalingManager: downscalingManager,
 		workers:          make(map[probeKey]*worker),
 	}
 }
@@ -125,6 +131,8 @@ func (m *manager) Start() {
 	go wait.Forever(m.updateReadiness, 0)
 	// Start syncing startup.
 	go wait.Forever(m.updateStartup, 0)
+	// Start syncing downscaling ranking.
+	go wait.Forever(m.updateDownscaling, 0)
 }
 
 // Key uniquely identifying container probes
@@ -134,13 +142,14 @@ type probeKey struct {
 	probeType     probeType
 }
 
-// Type of probe (liveness, readiness or startup)
+// Type of probe (liveness, readiness, startup or downscaliness)
 type probeType int
 
 const (
 	liveness probeType = iota
 	readiness
 	startup
+	downscaliness
 
 	probeResultSuccessful string = "successful"
 	probeResultFailed     string = "failed"
@@ -156,6 +165,8 @@ func (t probeType) String() string {
 		return "Liveness"
 	case startup:
 		return "Startup"
+	case downscaliness:
+		return "Downscaliness"
 	default:
 		return "UNKNOWN"
 	}
@@ -169,6 +180,18 @@ func (m *manager) AddPod(pod *v1.Pod) {
 	for _, c := range pod.Spec.Containers {
 		key.containerName = c.Name
 
+		if c.DownscalinessProbe != nil {
+			key.probeType = downscaliness
+			if _, ok := m.workers[key]; ok {
+				klog.Errorf("Downscaliness probe already exists! %v - %v",
+					format.Pod(pod), c.Name)
+				return
+			}
+			w := newWorker(m, readiness, pod, c)
+			m.workers[key] = w
+			go w.run()
+		}
+		
 		if c.StartupProbe != nil && utilfeature.DefaultFeatureGate.Enabled(features.StartupProbe) {
 			key.probeType = startup
 			if _, ok := m.workers[key]; ok {
@@ -307,4 +330,28 @@ func (m *manager) updateStartup() {
 
 	started := update.Result == results.Success
 	m.statusManager.SetContainerStartup(update.PodUID, update.ContainerID, started)
+}
+
+func (m *manager) updateDownscaling() {
+	update := <-m.downscalingManager.Updates()
+	// Only successful probing can update the downscaling index.
+	if update.Result != results.Success {
+		return
+	}
+
+	var index uint64
+	i, err := strconv.ParseUint(update.Output, 10, 32)
+	switch {
+	case err != nil:
+		klog.Errorf("The downscaling index should be an integer in [0, 100], %v - %v",
+		update.PodUID, update.ContainerID)
+		return
+	// Be lenient and cap the index to its maximum, it shouldn't be a fatal user error.
+	case i > 100:
+		i = 100
+		fallthrough
+	default:
+		index = i
+	}
+	m.statusManager.SetContainerDownscaliness(update.PodUID, update.ContainerID, uint32(index))
 }

@@ -105,6 +105,10 @@ type Manager interface {
 	// triggers a status update.
 	SetContainerStartup(podUID types.UID, containerID kubecontainer.ContainerID, started bool)
 
+	// SetContainerDownscaliness updates the cached container status with the given index, and
+	// triggers a status update.
+	SetContainerDownscaliness(podUID types.UID, containerID kubecontainer.ContainerID, index uint32) 
+
 	// TerminatePod resets the container status for the provided pod to terminated and triggers
 	// a status update.
 	TerminatePod(pod *v1.Pod)
@@ -195,6 +199,49 @@ func (m *manager) SetPodStatus(pod *v1.Pod, status v1.PodStatus) {
 	// because if the pod is in the non-running state, the pod worker still
 	// needs to be able to trigger an update and/or deletion.
 	m.updateStatusInternal(pod, status, pod.DeletionTimestamp != nil)
+}
+
+func (m *manager) SetContainerDownscaliness(podUID types.UID, containerID kubecontainer.ContainerID, index uint32) {
+	m.podStatusesLock.Lock()
+	defer m.podStatusesLock.Unlock()
+
+	pod, ok := m.podManager.GetPodByUID(podUID)
+	if !ok {
+		klog.V(4).Infof("Pod %q has been deleted, no need to update downscaliness", string(podUID))
+		return
+	}
+
+	oldStatus, found := m.podStatuses[pod.UID]
+	if !found {
+		klog.Warningf("Container downscaliness changed before pod has synced: %q - %q",
+			format.Pod(pod), containerID.String())
+		return
+	}
+
+	containerStatus, _, ok := findContainerStatus(&oldStatus.status, containerID.String())
+	if !ok {
+		klog.Warningf("Container downscaliness changed for unknown container: %q - %q",
+			format.Pod(pod), containerID.String())
+		return
+	}
+	state := containerStatus.State.Running
+	if state == nil {
+		klog.Warningf("Container downscaliness changed while the Pod was in an invalid state: %q - %q",
+			format.Pod(pod), containerID.String())
+		return
+	}
+	if state.DownscalingIndex == index {
+		klog.Warningf("Container downscaliness unchanged (%v): %q - %q",
+			index, format.Pod(pod), containerID.String())
+		return
+	}
+
+	// Make sure we're not updating the cached version.
+	status := *oldStatus.status.DeepCopy()
+	containerStatus, _, _ = findContainerStatus(&status, containerID.String())
+	containerStatus.State.Running.DownscalingIndex = index
+
+	m.updateStatusInternal(pod, status, false)
 }
 
 func (m *manager) SetContainerReadiness(podUID types.UID, containerID kubecontainer.ContainerID, ready bool) {

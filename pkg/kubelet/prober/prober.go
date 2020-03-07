@@ -53,6 +53,7 @@ type prober struct {
 	readinessHTTP httpprobe.Prober
 	livenessHTTP  httpprobe.Prober
 	startupHTTP   httpprobe.Prober
+	downscalinessHTTP   httpprobe.Prober
 	tcp           tcpprobe.Prober
 	runner        kubecontainer.ContainerCommandRunner
 
@@ -69,14 +70,15 @@ func newProber(
 
 	const followNonLocalRedirects = false
 	return &prober{
-		exec:          execprobe.New(),
-		readinessHTTP: httpprobe.New(followNonLocalRedirects),
-		livenessHTTP:  httpprobe.New(followNonLocalRedirects),
-		startupHTTP:   httpprobe.New(followNonLocalRedirects),
-		tcp:           tcpprobe.New(),
-		runner:        runner,
-		refManager:    refManager,
-		recorder:      recorder,
+		exec:              execprobe.New(),
+		readinessHTTP:     httpprobe.New(followNonLocalRedirects),
+		livenessHTTP:      httpprobe.New(followNonLocalRedirects),
+		startupHTTP:       httpprobe.New(followNonLocalRedirects),
+		downscalinessHTTP: httpprobe.New(followNonLocalRedirects),
+		tcp:               tcpprobe.New(),
+		runner:            runner,
+		refManager:        refManager,
+		recorder:          recorder,
 	}
 }
 
@@ -95,7 +97,7 @@ func (pb *prober) recordContainerEvent(pod *v1.Pod, container *v1.Container, con
 }
 
 // probe probes the container.
-func (pb *prober) probe(probeType probeType, pod *v1.Pod, status v1.PodStatus, container v1.Container, containerID kubecontainer.ContainerID) (results.Result, error) {
+func (pb *prober) probe(probeType probeType, pod *v1.Pod, status v1.PodStatus, container v1.Container, containerID kubecontainer.ContainerID) (results.Result, string, error) {
 	var probeSpec *v1.Probe
 	switch probeType {
 	case readiness:
@@ -104,14 +106,16 @@ func (pb *prober) probe(probeType probeType, pod *v1.Pod, status v1.PodStatus, c
 		probeSpec = container.LivenessProbe
 	case startup:
 		probeSpec = container.StartupProbe
+	case downscaliness:
+		probeSpec = container.DownscalinessProbe
 	default:
-		return results.Failure, fmt.Errorf("unknown probe type: %q", probeType)
+		return results.Failure, "", fmt.Errorf("unknown probe type: %q", probeType)
 	}
 
 	ctrName := fmt.Sprintf("%s:%s", format.Pod(pod), container.Name)
 	if probeSpec == nil {
 		klog.Warningf("%s probe for %s is nil", probeType, ctrName)
-		return results.Success, nil
+		return results.Success, "", nil
 	}
 
 	result, output, err := pb.runProbeWithRetries(probeType, probeSpec, pod, status, container, containerID, maxProbeRetries)
@@ -124,7 +128,7 @@ func (pb *prober) probe(probeType probeType, pod *v1.Pod, status v1.PodStatus, c
 			klog.V(1).Infof("%s probe for %q failed (%v): %s", probeType, ctrName, result, output)
 			pb.recordContainerEvent(pod, &container, containerID, v1.EventTypeWarning, events.ContainerUnhealthy, "%s probe failed: %v", probeType, output)
 		}
-		return results.Failure, err
+		return results.Failure, output, err
 	}
 	if result == probe.Warning {
 		pb.recordContainerEvent(pod, &container, containerID, v1.EventTypeWarning, events.ContainerProbeWarning, "%s probe warning: %v", probeType, output)
@@ -132,7 +136,7 @@ func (pb *prober) probe(probeType probeType, pod *v1.Pod, status v1.PodStatus, c
 	} else {
 		klog.V(3).Infof("%s probe for %q succeeded", probeType, ctrName)
 	}
-	return results.Success, nil
+	return results.Success, output, nil
 }
 
 // runProbeWithRetries tries to probe the container in a finite loop, it returns the last result
@@ -187,6 +191,8 @@ func (pb *prober) runProbe(probeType probeType, p *v1.Probe, pod *v1.Pod, status
 			return pb.livenessHTTP.Probe(url, headers, timeout)
 		case startup:
 			return pb.startupHTTP.Probe(url, headers, timeout)
+		case downscaliness:
+			return pb.downscalinessHTTP.Probe(url, headers, timeout)
 		default:
 			return pb.readinessHTTP.Probe(url, headers, timeout)
 		}

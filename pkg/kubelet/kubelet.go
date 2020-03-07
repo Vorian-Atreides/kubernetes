@@ -655,6 +655,7 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 
 	klet.livenessManager = proberesults.NewManager()
 	klet.startupManager = proberesults.NewManager()
+	klet.downscalingManager = proberesults.NewManager()
 
 	klet.podCache = kubecontainer.NewCache()
 	var checkpointManager checkpointmanager.CheckpointManager
@@ -791,6 +792,7 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 		klet.statusManager,
 		klet.livenessManager,
 		klet.startupManager,
+		klet.downscalingManager,
 		klet.runner,
 		containerRefManager,
 		kubeDeps.Recorder)
@@ -980,6 +982,8 @@ type Kubelet struct {
 	// Manages container health check results.
 	livenessManager proberesults.Manager
 	startupManager  proberesults.Manager
+	// Manager container downscaling index.
+	downscalingManager  proberesults.Manager
 
 	// How long to keep idle streaming command execution/port forwarding
 	// connections open before terminating them

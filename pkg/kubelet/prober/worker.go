@@ -98,6 +98,10 @@ func newWorker(
 		w.spec = container.LivenessProbe
 		w.resultsManager = m.livenessManager
 		w.initialValue = results.Success
+	case downscaliness:
+		w.spec = container.DownscalinessProbe
+		w.resultsManager = m.downscalingManager
+		w.initialValue = results.Success
 	case startup:
 		w.spec = container.StartupProbe
 		w.resultsManager = m.startupManager
@@ -201,7 +205,7 @@ func (w *worker) doProbe() (keepGoing bool) {
 			w.resultsManager.Remove(w.containerID)
 		}
 		w.containerID = kubecontainer.ParseContainerID(c.ContainerID)
-		w.resultsManager.Set(w.containerID, w.initialValue, w.pod)
+		w.resultsManager.Set(w.containerID, w.initialValue, "", w.pod)
 		// We've got a new container; resume probing.
 		w.onHold = false
 	}
@@ -215,7 +219,7 @@ func (w *worker) doProbe() (keepGoing bool) {
 		klog.V(3).Infof("Non-running container probed: %v - %v",
 			format.Pod(w.pod), w.container.Name)
 		if !w.containerID.IsEmpty() {
-			w.resultsManager.Set(w.containerID, results.Failure, w.pod)
+			w.resultsManager.Set(w.containerID, results.Failure, "", w.pod)
 		}
 		// Abort if the container will not be restarted.
 		return c.State.Terminated == nil ||
@@ -242,7 +246,7 @@ func (w *worker) doProbe() (keepGoing bool) {
 	// TODO: in order for exec probes to correctly handle downward API env, we must be able to reconstruct
 	// the full container environment here, OR we must make a call to the CRI in order to get those environment
 	// values from the running container.
-	result, err := w.probeManager.prober.probe(w.probeType, w.pod, status, w.container, w.containerID)
+	result, output, err := w.probeManager.prober.probe(w.probeType, w.pod, status, w.container, w.containerID)
 	if err != nil {
 		// Prober error, throw away the result.
 		return true
@@ -270,7 +274,7 @@ func (w *worker) doProbe() (keepGoing bool) {
 		return true
 	}
 
-	w.resultsManager.Set(w.containerID, result, w.pod)
+	w.resultsManager.Set(w.containerID, result, output, w.pod)
 
 	if (w.probeType == liveness || w.probeType == startup) && result == results.Failure {
 		// The container fails a liveness/startup check, it will need to be restarted.

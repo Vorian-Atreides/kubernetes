@@ -30,7 +30,7 @@ type Manager interface {
 	Get(kubecontainer.ContainerID) (Result, bool)
 	// Set sets the cached result for the container with the given ID.
 	// The pod is only included to be sent with the update.
-	Set(kubecontainer.ContainerID, Result, *v1.Pod)
+	Set(kubecontainer.ContainerID, Result, string, *v1.Pod)
 	// Remove clears the cached result for the container with the given ID.
 	Remove(kubecontainer.ContainerID)
 	// Updates creates a channel that receives an Update whenever its result changes (but not
@@ -80,6 +80,7 @@ func (r Result) ToPrometheusType() float64 {
 type Update struct {
 	ContainerID kubecontainer.ContainerID
 	Result      Result
+	Output      string
 	PodUID      types.UID
 }
 
@@ -110,9 +111,9 @@ func (m *manager) Get(id kubecontainer.ContainerID) (Result, bool) {
 	return result, found
 }
 
-func (m *manager) Set(id kubecontainer.ContainerID, result Result, pod *v1.Pod) {
+func (m *manager) Set(id kubecontainer.ContainerID, result Result, output string, pod *v1.Pod) {
 	if m.setInternal(id, result) {
-		m.updates <- Update{id, result, pod.UID}
+		m.updates <- Update{id, result, output, pod.UID}
 	}
 }
 
