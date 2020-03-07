@@ -132,6 +132,12 @@ func SetObjectDefaults_DaemonSet(in *v1beta1.DaemonSet) {
 				v1.SetDefaults_HTTPGetAction(a.StartupProbe.Handler.HTTPGet)
 			}
 		}
+		if a.DownscalinessProbe != nil {
+			v1.SetDefaults_Probe(a.DownscalinessProbe)
+			if a.DownscalinessProbe.Handler.HTTPGet != nil {
+				v1.SetDefaults_HTTPGetAction(a.DownscalinessProbe.Handler.HTTPGet)
+			}
+		}
 		if a.Lifecycle != nil {
 			if a.Lifecycle.PostStart != nil {
 				if a.Lifecycle.PostStart.HTTPGet != nil {
@@ -180,6 +186,12 @@ func SetObjectDefaults_DaemonSet(in *v1beta1.DaemonSet) {
 				v1.SetDefaults_HTTPGetAction(a.StartupProbe.Handler.HTTPGet)
 			}
 		}
+		if a.DownscalinessProbe != nil {
+			v1.SetDefaults_Probe(a.DownscalinessProbe)
+			if a.DownscalinessProbe.Handler.HTTPGet != nil {
+				v1.SetDefaults_HTTPGetAction(a.DownscalinessProbe.Handler.HTTPGet)
+			}
+		}
 		if a.Lifecycle != nil {
 			if a.Lifecycle.PostStart != nil {
 				if a.Lifecycle.PostStart.HTTPGet != nil {
@@ -225,6 +237,12 @@ func SetObjectDefaults_DaemonSet(in *v1beta1.DaemonSet) {
 			v1.SetDefaults_Probe(a.EphemeralContainerCommon.StartupProbe)
 			if a.EphemeralContainerCommon.StartupProbe.Handler.HTTPGet != nil {
 				v1.SetDefaults_HTTPGetAction(a.EphemeralContainerCommon.StartupProbe.Handler.HTTPGet)
+			}
+		}
+		if a.EphemeralContainerCommon.DownscalinessProbe != nil {
+			v1.SetDefaults_Probe(a.EphemeralContainerCommon.DownscalinessProbe)
+			if a.EphemeralContainerCommon.DownscalinessProbe.Handler.HTTPGet != nil {
+				v1.SetDefaults_HTTPGetAction(a.EphemeralContainerCommon.DownscalinessProbe.Handler.HTTPGet)
 			}
 		}
 		if a.EphemeralContainerCommon.Lifecycle != nil {
@@ -339,6 +357,12 @@ func SetObjectDefaults_Deployment(in *v1beta1.Deployment) {
 				v1.SetDefaults_HTTPGetAction(a.StartupProbe.Handler.HTTPGet)
 			}
 		}
+		if a.DownscalinessProbe != nil {
+			v1.SetDefaults_Probe(a.DownscalinessProbe)
+			if a.DownscalinessProbe.Handler.HTTPGet != nil {
+				v1.SetDefaults_HTTPGetAction(a.DownscalinessProbe.Handler.HTTPGet)
+			}
+		}
 		if a.Lifecycle != nil {
 			if a.Lifecycle.PostStart != nil {
 				if a.Lifecycle.PostStart.HTTPGet != nil {
@@ -387,6 +411,12 @@ func SetObjectDefaults_Deployment(in *v1beta1.Deployment) {
 				v1.SetDefaults_HTTPGetAction(a.StartupProbe.Handler.HTTPGet)
 			}
 		}
+		if a.DownscalinessProbe != nil {
+			v1.SetDefaults_Probe(a.DownscalinessProbe)
+			if a.DownscalinessProbe.Handler.HTTPGet != nil {
+				v1.SetDefaults_HTTPGetAction(a.DownscalinessProbe.Handler.HTTPGet)
+			}
+		}
 		if a.Lifecycle != nil {
 			if a.Lifecycle.PostStart != nil {
 				if a.Lifecycle.PostStart.HTTPGet != nil {
@@ -432,6 +462,12 @@ func SetObjectDefaults_Deployment(in *v1beta1.Deployment) {
 			v1.SetDefaults_Probe(a.EphemeralContainerCommon.StartupProbe)
 			if a.EphemeralContainerCommon.StartupProbe.Handler.HTTPGet != nil {
 				v1.SetDefaults_HTTPGetAction(a.EphemeralContainerCommon.StartupProbe.Handler.HTTPGet)
+			}
+		}
+		if a.EphemeralContainerCommon.DownscalinessProbe != nil {
+			v1.SetDefaults_Probe(a.EphemeralContainerCommon.DownscalinessProbe)
+			if a.EphemeralContainerCommon.DownscalinessProbe.Handler.HTTPGet != nil {
+				v1.SetDefaults_HTTPGetAction(a.EphemeralContainerCommon.DownscalinessProbe.Handler.HTTPGet)
 			}
 		}
 		if a.EphemeralContainerCommon.Lifecycle != nil {
@@ -568,6 +604,12 @@ func SetObjectDefaults_ReplicaSet(in *v1beta1.ReplicaSet) {
 				v1.SetDefaults_HTTPGetAction(a.StartupProbe.Handler.HTTPGet)
 			}
 		}
+		if a.DownscalinessProbe != nil {
+			v1.SetDefaults_Probe(a.DownscalinessProbe)
+			if a.DownscalinessProbe.Handler.HTTPGet != nil {
+				v1.SetDefaults_HTTPGetAction(a.DownscalinessProbe.Handler.HTTPGet)
+			}
+		}
 		if a.Lifecycle != nil {
 			if a.Lifecycle.PostStart != nil {
 				if a.Lifecycle.PostStart.HTTPGet != nil {
@@ -616,6 +658,12 @@ func SetObjectDefaults_ReplicaSet(in *v1beta1.ReplicaSet) {
 				v1.SetDefaults_HTTPGetAction(a.StartupProbe.Handler.HTTPGet)
 			}
 		}
+		if a.DownscalinessProbe != nil {
+			v1.SetDefaults_Probe(a.DownscalinessProbe)
+			if a.DownscalinessProbe.Handler.HTTPGet != nil {
+				v1.SetDefaults_HTTPGetAction(a.DownscalinessProbe.Handler.HTTPGet)
+			}
+		}
 		if a.Lifecycle != nil {
 			if a.Lifecycle.PostStart != nil {
 				if a.Lifecycle.PostStart.HTTPGet != nil {
@@ -661,6 +709,12 @@ func SetObjectDefaults_ReplicaSet(in *v1beta1.ReplicaSet) {
 			v1.SetDefaults_Probe(a.EphemeralContainerCommon.StartupProbe)
 			if a.EphemeralContainerCommon.StartupProbe.Handler.HTTPGet != nil {
 				v1.SetDefaults_HTTPGetAction(a.EphemeralContainerCommon.StartupProbe.Handler.HTTPGet)
+			}
+		}
+		if a.EphemeralContainerCommon.DownscalinessProbe != nil {
+			v1.SetDefaults_Probe(a.EphemeralContainerCommon.DownscalinessProbe)
+			if a.EphemeralContainerCommon.DownscalinessProbe.Handler.HTTPGet != nil {
+				v1.SetDefaults_HTTPGetAction(a.EphemeralContainerCommon.DownscalinessProbe.Handler.HTTPGet)
 			}
 		}
 		if a.EphemeralContainerCommon.Lifecycle != nil {

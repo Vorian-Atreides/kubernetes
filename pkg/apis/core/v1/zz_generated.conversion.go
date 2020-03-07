@@ -2845,6 +2845,7 @@ func autoConvert_v1_Container_To_core_Container(in *v1.Container, out *core.Cont
 	out.LivenessProbe = (*core.Probe)(unsafe.Pointer(in.LivenessProbe))
 	out.ReadinessProbe = (*core.Probe)(unsafe.Pointer(in.ReadinessProbe))
 	out.StartupProbe = (*core.Probe)(unsafe.Pointer(in.StartupProbe))
+	out.DownscalinessProbe = (*core.Probe)(unsafe.Pointer(in.DownscalinessProbe))
 	out.Lifecycle = (*core.Lifecycle)(unsafe.Pointer(in.Lifecycle))
 	out.TerminationMessagePath = in.TerminationMessagePath
 	out.TerminationMessagePolicy = core.TerminationMessagePolicy(in.TerminationMessagePolicy)
@@ -2878,6 +2879,7 @@ func autoConvert_core_Container_To_v1_Container(in *core.Container, out *v1.Cont
 	out.LivenessProbe = (*v1.Probe)(unsafe.Pointer(in.LivenessProbe))
 	out.ReadinessProbe = (*v1.Probe)(unsafe.Pointer(in.ReadinessProbe))
 	out.StartupProbe = (*v1.Probe)(unsafe.Pointer(in.StartupProbe))
+	out.DownscalinessProbe = (*v1.Probe)(unsafe.Pointer(in.DownscalinessProbe))
 	out.Lifecycle = (*v1.Lifecycle)(unsafe.Pointer(in.Lifecycle))
 	out.TerminationMessagePath = in.TerminationMessagePath
 	out.TerminationMessagePolicy = v1.TerminationMessagePolicy(in.TerminationMessagePolicy)
@@ -2970,6 +2972,7 @@ func Convert_core_ContainerState_To_v1_ContainerState(in *core.ContainerState, o
 
 func autoConvert_v1_ContainerStateRunning_To_core_ContainerStateRunning(in *v1.ContainerStateRunning, out *core.ContainerStateRunning, s conversion.Scope) error {
 	out.StartedAt = in.StartedAt
+	out.DownscalingIndex = in.DownscalingIndex
 	return nil
 }
 
@@ -2980,6 +2983,7 @@ func Convert_v1_ContainerStateRunning_To_core_ContainerStateRunning(in *v1.Conta
 
 func autoConvert_core_ContainerStateRunning_To_v1_ContainerStateRunning(in *core.ContainerStateRunning, out *v1.ContainerStateRunning, s conversion.Scope) error {
 	out.StartedAt = in.StartedAt
+	out.DownscalingIndex = in.DownscalingIndex
 	return nil
 }
 
@@ -3433,6 +3437,7 @@ func autoConvert_v1_EphemeralContainerCommon_To_core_EphemeralContainerCommon(in
 	out.LivenessProbe = (*core.Probe)(unsafe.Pointer(in.LivenessProbe))
 	out.ReadinessProbe = (*core.Probe)(unsafe.Pointer(in.ReadinessProbe))
 	out.StartupProbe = (*core.Probe)(unsafe.Pointer(in.StartupProbe))
+	out.DownscalinessProbe = (*core.Probe)(unsafe.Pointer(in.DownscalinessProbe))
 	out.Lifecycle = (*core.Lifecycle)(unsafe.Pointer(in.Lifecycle))
 	out.TerminationMessagePath = in.TerminationMessagePath
 	out.TerminationMessagePolicy = core.TerminationMessagePolicy(in.TerminationMessagePolicy)
@@ -3466,6 +3471,7 @@ func autoConvert_core_EphemeralContainerCommon_To_v1_EphemeralContainerCommon(in
 	out.LivenessProbe = (*v1.Probe)(unsafe.Pointer(in.LivenessProbe))
 	out.ReadinessProbe = (*v1.Probe)(unsafe.Pointer(in.ReadinessProbe))
 	out.StartupProbe = (*v1.Probe)(unsafe.Pointer(in.StartupProbe))
+	out.DownscalinessProbe = (*v1.Probe)(unsafe.Pointer(in.DownscalinessProbe))
 	out.Lifecycle = (*v1.Lifecycle)(unsafe.Pointer(in.Lifecycle))
 	out.TerminationMessagePath = in.TerminationMessagePath
 	out.TerminationMessagePolicy = v1.TerminationMessagePolicy(in.TerminationMessagePolicy)

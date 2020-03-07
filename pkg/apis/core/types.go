@@ -2064,6 +2064,8 @@ type Container struct {
 	// +optional
 	StartupProbe *Probe
 	// +optional
+	DownscalinessProbe *Probe
+	// +optional
 	Lifecycle *Lifecycle
 	// Required.
 	// +optional
@@ -2153,6 +2155,8 @@ type ContainerStateWaiting struct {
 type ContainerStateRunning struct {
 	// +optional
 	StartedAt metav1.Time
+	// +optional
+	DownscalingIndex uint32
 }
 
 // ContainerStateTerminated represents the terminated state of a container
@@ -2977,6 +2981,8 @@ type EphemeralContainerCommon struct {
 	// Probes are not allowed for ephemeral containers.
 	// +optional
 	StartupProbe *Probe
+	// +optional
+	DownscalinessProbe *Probe
 	// Lifecycle is not allowed for ephemeral containers.
 	// +optional
 	Lifecycle *Lifecycle

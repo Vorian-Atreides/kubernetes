@@ -2205,6 +2205,11 @@ type Container struct {
 	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
 	// +optional
 	StartupProbe *Probe `json:"startupProbe,omitempty" protobuf:"bytes,22,opt,name=startupProbe"`
+	// DownscalinessProbe periodicically check the Pod downscaling ranking, which
+	// will be used to elect the most likely Pod to be removed during a downscaling.
+	// Cannot be updated.
+	// +optional
+	DownscalinessProbe *Probe `json:"downscalinessProbe,omitempty" protobuf:"bytes,23,opt,name=downscalinessProbe"`
 	// Actions that the management system should take in response to container lifecycle events.
 	// Cannot be updated.
 	// +optional
@@ -2331,6 +2336,9 @@ type ContainerStateRunning struct {
 	// Time at which the container was last (re-)started
 	// +optional
 	StartedAt metav1.Time `json:"startedAt,omitempty" protobuf:"bytes,1,opt,name=startedAt"`
+	// Index used to select the best candidate(s) to be downscaled among a workload
+	// +optional
+	DownscalingIndex uint32 `json:"downscalingIndex,omitempty" protobuf:"uint32,2,opt,name=downscalingIndex"`
 }
 
 // ContainerStateTerminated is a terminated state of a container.
@@ -3308,6 +3316,9 @@ type EphemeralContainerCommon struct {
 	// Probes are not allowed for ephemeral containers.
 	// +optional
 	StartupProbe *Probe `json:"startupProbe,omitempty" protobuf:"bytes,22,opt,name=startupProbe"`
+	// Probes are not allowed for ephemeral containers.
+	// +optional
+	DownscalinessProbe *Probe `json:"downscalinessProbe,omitempty" protobuf:"bytes,23,opt,name=downscalinessProbe"`
 	// Lifecycle is not allowed for ephemeral containers.
 	// +optional
 	Lifecycle *Lifecycle `json:"lifecycle,omitempty" protobuf:"bytes,12,opt,name=lifecycle"`
