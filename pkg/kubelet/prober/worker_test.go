@@ -198,7 +198,7 @@ func TestSuccessThreshold(t *testing.T) {
 	m.statusManager.SetPodStatus(w.pod, getTestRunningStatus())
 
 	// Start out failure.
-	w.resultsManager.Set(testContainerID, results.Failure, &v1.Pod{})
+	w.resultsManager.Set(testContainerID, results.Failure, "", &v1.Pod{})
 
 	for i := 0; i < 2; i++ {
 		// Probe defaults to Failure.

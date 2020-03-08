@@ -852,7 +852,7 @@ func (s ActivePodsWithRanks) Less(i, j int) bool {
 	// 4. Doubled up < not doubled up
 	// Iterates through the Ranks until the first inequality. The first Ranking
 	// is defined by the Downscaling Index and the second Ranking is defined
-	// by the number of colocated read Pods.
+	// by the number of colocated ready Pods.
 	for it := 0; it < len(s.Ranks); it++ {
 		if s.Ranks[it][i] != s.Ranks[it][j] {
 			return s.Ranks[it][i] > s.Ranks[it][j]

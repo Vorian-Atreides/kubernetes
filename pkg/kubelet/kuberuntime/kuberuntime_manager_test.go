@@ -858,7 +858,7 @@ func TestComputePodActions(t *testing.T) {
 				pod.Spec.RestartPolicy = v1.RestartPolicyAlways
 			},
 			mutateStatusFn: func(status *kubecontainer.PodStatus) {
-				m.livenessManager.Set(status.ContainerStatuses[1].ID, proberesults.Failure, basePod)
+				m.livenessManager.Set(status.ContainerStatuses[1].ID, proberesults.Failure, "", basePod)
 			},
 			actions: podActions{
 				SandboxID:         baseStatus.SandboxStatuses[0].Id,
@@ -874,7 +874,7 @@ func TestComputePodActions(t *testing.T) {
 				pod.Spec.RestartPolicy = v1.RestartPolicyAlways
 			},
 			mutateStatusFn: func(status *kubecontainer.PodStatus) {
-				m.startupManager.Set(status.ContainerStatuses[1].ID, proberesults.Failure, basePod)
+				m.startupManager.Set(status.ContainerStatuses[1].ID, proberesults.Failure, "", basePod)
 			},
 			actions: podActions{
 				SandboxID:         baseStatus.SandboxStatuses[0].Id,

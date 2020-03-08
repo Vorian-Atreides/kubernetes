@@ -281,9 +281,9 @@ func TestUpdatePodStatus(t *testing.T) {
 		{testPodUID, probedUnready.Name, readiness}: {},
 		{testPodUID, terminated.Name, readiness}:    {},
 	}
-	m.readinessManager.Set(kubecontainer.ParseContainerID(probedReady.ContainerID), results.Success, &v1.Pod{})
-	m.readinessManager.Set(kubecontainer.ParseContainerID(probedUnready.ContainerID), results.Failure, &v1.Pod{})
-	m.readinessManager.Set(kubecontainer.ParseContainerID(terminated.ContainerID), results.Success, &v1.Pod{})
+	m.readinessManager.Set(kubecontainer.ParseContainerID(probedReady.ContainerID), results.Success, "", &v1.Pod{})
+	m.readinessManager.Set(kubecontainer.ParseContainerID(probedUnready.ContainerID), results.Failure, "", &v1.Pod{})
+	m.readinessManager.Set(kubecontainer.ParseContainerID(terminated.ContainerID), results.Success, "", &v1.Pod{})
 
 	m.UpdatePodStatus(testPodUID, &podStatus)
 
@@ -318,7 +318,7 @@ func TestUpdateReadiness(t *testing.T) {
 	defer func() {
 		close(stopCh)
 		// Send an update to exit updateReadiness()
-		m.readinessManager.Set(kubecontainer.ContainerID{}, results.Success, &v1.Pod{})
+		m.readinessManager.Set(kubecontainer.ContainerID{}, results.Success, "", &v1.Pod{})
 	}()
 
 	exec := syncExecProber{}
