@@ -812,10 +812,13 @@ type ActivePodsWithRanks struct {
 	// Pods is a list of pods.
 	Pods []*v1.Pod
 
-	// Rank is a ranking of pods.  This ranking is used during sorting when
+	// Ranks is a ranking of pods. This ranking is used during sorting when
 	// comparing two pods that are both scheduled, in the same phase, and
 	// having the same ready status.
-	Rank []int
+	//
+	// The Ranks is a 2 dimensional array, where the lowest index Rank has
+	// the highest priority and the highest index are used in case of equality.
+	Ranks [][]int
 }
 
 func (s ActivePodsWithRanks) Len() int {
@@ -824,7 +827,9 @@ func (s ActivePodsWithRanks) Len() int {
 
 func (s ActivePodsWithRanks) Swap(i, j int) {
 	s.Pods[i], s.Pods[j] = s.Pods[j], s.Pods[i]
-	s.Rank[i], s.Rank[j] = s.Rank[j], s.Rank[i]
+	for it := 0; it < len(s.Ranks); it++ {
+		s.Ranks[it][i], s.Ranks[it][j] = s.Ranks[it][j], s.Ranks[it][i]
+	}
 }
 
 // Less compares two pods with corresponding ranks and returns true if the first
@@ -845,12 +850,15 @@ func (s ActivePodsWithRanks) Less(i, j int) bool {
 		return !podutil.IsPodReady(s.Pods[i])
 	}
 	// 4. Doubled up < not doubled up
-	// If one of the two pods is on the same node as one or more additional
-	// ready pods that belong to the same replicaset, whichever pod has more
-	// colocated ready pods is less
-	if s.Rank[i] != s.Rank[j] {
-		return s.Rank[i] > s.Rank[j]
+	// Iterates through the Ranks until the first inequality. The first Ranking
+	// is defined by the Downscaling Index and the second Ranking is defined
+	// by the number of colocated read Pods.
+	for it := 0; it < len(s.Ranks); it++ {
+		if s.Ranks[it][i] != s.Ranks[it][j] {
+			return s.Ranks[it][i] > s.Ranks[it][j]
+		}
 	}
+
 	// TODO: take availability into account when we push minReadySeconds information from deployment into pods,
 	//       see https://github.com/kubernetes/kubernetes/issues/22065
 	// 5. Been ready for empty time < less time < more time

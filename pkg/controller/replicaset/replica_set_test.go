@@ -1812,12 +1812,32 @@ func TestGetPodsToDelete(t *testing.T) {
 	// a scheduled, running, ready pod on fake-node-2
 	scheduledRunningReadyPodOnNode2 := newPod("scheduled-running-ready-pod-on-node-2", rs, v1.PodRunning, nil, true)
 	scheduledRunningReadyPodOnNode2.Spec.NodeName = "fake-node-2"
+	scheduledRunningReadyPodOnNode2.Status.PodIP = "192.168.0.1"
 	scheduledRunningReadyPodOnNode2.Status.Conditions = []v1.PodCondition{
 		{
 			Type:   v1.PodReady,
 			Status: v1.ConditionTrue,
 		},
 	}
+		// a scheduled, running, ready pod on fake-node-3
+		scheduledRunningReadyPodOnNode3 := newPod("scheduled-running-ready-pod-on-node-3", rs, v1.PodRunning, nil, true)
+		scheduledRunningReadyPodOnNode3.Spec.NodeName = "fake-node-3"
+		scheduledRunningReadyPodOnNode3.Status.PodIP = "192.168.0.2"
+		scheduledRunningReadyPodOnNode3.Status.ContainerStatuses = []v1.ContainerStatus{
+			{
+				State: v1.ContainerState{
+					Running: &v1.ContainerStateRunning{
+						DownscalingIndex: 10,
+					},
+				},
+			},
+		}
+		scheduledRunningReadyPodOnNode3.Status.Conditions = []v1.PodCondition{
+			{
+				Type:   v1.PodReady,
+				Status: v1.ConditionTrue,
+			},
+		}
 
 	tests := []struct {
 		name string
@@ -1921,6 +1941,17 @@ func TestGetPodsToDelete(t *testing.T) {
 			expectedPodsToDelete: []*v1.Pod{
 				scheduledRunningNotReadyPod,
 				scheduledRunningNotReadyPod,
+			},
+		},
+		{
+			name: "ready with downscaling index vs ready without downscaling index, diff < len(pods)",
+			pods: []*v1.Pod{
+				scheduledRunningReadyPodOnNode2,
+				scheduledRunningReadyPodOnNode3,
+			},
+			diff: 1,
+			expectedPodsToDelete: []*v1.Pod{
+				scheduledRunningReadyPodOnNode3,
 			},
 		},
 		{

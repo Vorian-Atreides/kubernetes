@@ -802,46 +802,29 @@ func getPodsToDelete(filteredPods, relatedPods []*v1.Pod, diff int) []*v1.Pod {
 	// No need to sort pods if we are about to delete all of them.
 	// diff will always be <= len(filteredPods), so not need to handle > case.
 	if diff < len(filteredPods) {
-		// first we filter by downscaling indexes, the Pods with the highest index
-		// must be selected.
-		podsWithDownscalingRanks := getPodsRankedByDownscalingIndex(filteredPods)
-		sort.Sort(podsWithDownscalingRanks)
-
-		// if there are duplicated ranking from the downscaling index,
-		// then we rank each Pod with the number of active Pods on their Node.
-		trailingDuplicateIndex := firstTrailingDuplicate(podsWithDownscalingRanks.Rank[:diff])
-		if trailingDuplicateIndex >= 0 {
-			podsWithNodeRanks := getPodsRankedByRelatedPodsOnSameNode(
-				podsWithDownscalingRanks.Pods[trailingDuplicateIndex:diff],
-				relatedPods,
-			)
-			sort.Sort(podsWithNodeRanks)
+		// First we filter by downscaling index, then we order the equalities
+		// by the number of colocated Pods.
+		downscalingRank := getPodsRankedByDownscalingIndex(filteredPods)
+		podsWithNodeRank := getPodsRankedByRelatedPodsOnSameNode(filteredPods, relatedPods)
+		activePodsWithRanks := controller.ActivePodsWithRanks{
+			Pods: filteredPods,
+			Ranks: [][]int{
+				downscalingRank,
+				podsWithNodeRank,
+			},
 		}
+		sort.Sort(activePodsWithRanks)
 	}
 	return filteredPods[:diff]
-}
-
-// firstTrailingDuplicate must be called from a sorted list, the function return
-// the index of the first trailing duplicate and will return -1 if there is no
-// duplicates.
-// Example: [5, 4, 4, 3, 2, 2, 2] will return 4.
-func firstTrailingDuplicate(ranks []int) int {
-	i := len(ranks) - 1
-	for ; i - 1 >= 0; i--{
-		if ranks[i - 1] != ranks[i] {
-			break
-		}
-	}
-	return -1
 }
 
 // getPodsRankedByDownscalingIndex return an ActivePodsWithRanks value
 // that wraps podsToRank and assigns each pod a rank equal to the average of
 // its containers' downscaling indexes.
-func getPodsRankedByDownscalingIndex(podsToRank []*v1.Pod) controller.ActivePodsWithRanks {
-	podsAggregatedDownscalingIndex := make(map[string]uint32)
+func getPodsRankedByDownscalingIndex(podsToRank []*v1.Pod) []int {
+	podsAggregatedDownscalingIndex := make(map[string]int32)
 	for _, pod := range podsToRank {
-		var runningCount uint32 = 0
+		var runningCount int32 = 0
 		podsAggregatedDownscalingIndex[pod.Status.PodIP] = 0
 		// Sum the downscaling index from every running containers on this Pod.
 		for _, containerStatus := range pod.Status.ContainerStatuses {
@@ -862,14 +845,14 @@ func getPodsRankedByDownscalingIndex(podsToRank []*v1.Pod) controller.ActivePods
 	for i, pod := range podsToRank {
 		ranks[i] = int(podsAggregatedDownscalingIndex[pod.Status.PodIP])
 	}
-	return controller.ActivePodsWithRanks{Pods: podsToRank, Rank: ranks}
+	return ranks
 }
 
 // getPodsRankedByRelatedPodsOnSameNode returns an ActivePodsWithRanks value
 // that wraps podsToRank and assigns each pod a rank equal to the number of
 // active pods in relatedPods that are colocated on the same node with the pod.
 // relatedPods generally should be a superset of podsToRank.
-func getPodsRankedByRelatedPodsOnSameNode(podsToRank, relatedPods []*v1.Pod) controller.ActivePodsWithRanks {
+func getPodsRankedByRelatedPodsOnSameNode(podsToRank, relatedPods []*v1.Pod) []int {
 	podsOnNode := make(map[string]int)
 	for _, pod := range relatedPods {
 		if controller.IsPodActive(pod) {
@@ -880,7 +863,7 @@ func getPodsRankedByRelatedPodsOnSameNode(podsToRank, relatedPods []*v1.Pod) con
 	for i, pod := range podsToRank {
 		ranks[i] = podsOnNode[pod.Spec.NodeName]
 	}
-	return controller.ActivePodsWithRanks{Pods: podsToRank, Rank: ranks}
+	return ranks
 }
 
 func getPodKeys(pods []*v1.Pod) []string {

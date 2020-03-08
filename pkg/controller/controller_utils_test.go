@@ -479,7 +479,9 @@ func TestSortingActivePodsWithRanks(t *testing.T) {
 	for _, pod := range equalityTests {
 		podsWithRanks := ActivePodsWithRanks{
 			Pods: []*v1.Pod{pod, pod},
-			Rank: []int{1, 1},
+			Ranks: [][]int{
+				{1, 1},
+			},
 		}
 		if podsWithRanks.Less(0, 1) || podsWithRanks.Less(1, 0) {
 			t.Errorf("expected pod %q not to be less than than itself", pod.Name)
@@ -487,35 +489,40 @@ func TestSortingActivePodsWithRanks(t *testing.T) {
 	}
 	type podWithRank struct {
 		pod  *v1.Pod
-		rank int
+		rankFirstAlgo int
+		rankSecondAlgo int
 	}
 	inequalityTests := []struct {
 		lesser, greater podWithRank
 	}{
-		{podWithRank{unscheduledPod, 1}, podWithRank{scheduledPendingPod, 2}},
-		{podWithRank{unscheduledPod, 2}, podWithRank{scheduledPendingPod, 1}},
-		{podWithRank{scheduledPendingPod, 1}, podWithRank{unknownPhasePod, 2}},
-		{podWithRank{unknownPhasePod, 1}, podWithRank{runningNotReadyPod, 2}},
-		{podWithRank{runningNotReadyPod, 1}, podWithRank{runningReadyNoLastTransitionTimePod, 1}},
-		{podWithRank{runningReadyNoLastTransitionTimePod, 1}, podWithRank{runningReadyNow, 1}},
-		{podWithRank{runningReadyNow, 2}, podWithRank{runningReadyNoLastTransitionTimePod, 1}},
-		{podWithRank{runningReadyNow, 1}, podWithRank{runningReadyThen, 1}},
-		{podWithRank{runningReadyNow, 2}, podWithRank{runningReadyThen, 1}},
-		{podWithRank{runningReadyNowHighRestarts, 1}, podWithRank{runningReadyNow, 1}},
-		{podWithRank{runningReadyNow, 2}, podWithRank{runningReadyNowHighRestarts, 1}},
-		{podWithRank{runningReadyNow, 1}, podWithRank{runningReadyNowCreatedThen, 1}},
-		{podWithRank{runningReadyNowCreatedThen, 2}, podWithRank{runningReadyNow, 1}},
+		{podWithRank{unscheduledPod, 1, 0}, podWithRank{scheduledPendingPod, 2, 0}},
+		{podWithRank{unscheduledPod, 2, 0}, podWithRank{scheduledPendingPod, 1, 0}},
+		{podWithRank{scheduledPendingPod, 1, 0}, podWithRank{unknownPhasePod, 2, 0}},
+		{podWithRank{unknownPhasePod, 1, 0}, podWithRank{runningNotReadyPod, 2, 0}},
+		{podWithRank{runningNotReadyPod, 1, 0}, podWithRank{runningReadyNoLastTransitionTimePod, 1, 0}},
+		{podWithRank{runningReadyNoLastTransitionTimePod, 1, 0}, podWithRank{runningReadyNow, 1, 0}},
+		{podWithRank{runningReadyNow, 2, 0}, podWithRank{runningReadyNoLastTransitionTimePod, 1, 0}},
+		{podWithRank{runningReadyNow, 1, 0}, podWithRank{runningReadyThen, 1, 0}},
+		{podWithRank{runningReadyNow, 2, 0}, podWithRank{runningReadyThen, 1, 0}},
+		{podWithRank{runningReadyNow, 2, 1}, podWithRank{runningReadyThen, 2, 0}},
+		{podWithRank{runningReadyNowHighRestarts, 1, 0}, podWithRank{runningReadyNow, 1, 0}},
+		{podWithRank{runningReadyNow, 2, 0}, podWithRank{runningReadyNowHighRestarts, 1, 0}},
+		{podWithRank{runningReadyNow, 1, 0}, podWithRank{runningReadyNowCreatedThen, 1, 0}},
+		{podWithRank{runningReadyNowCreatedThen, 2, 0}, podWithRank{runningReadyNow, 1, 0}},
 	}
 	for _, test := range inequalityTests {
 		podsWithRanks := ActivePodsWithRanks{
 			Pods: []*v1.Pod{test.lesser.pod, test.greater.pod},
-			Rank: []int{test.lesser.rank, test.greater.rank},
+			Ranks: [][]int{
+				{test.lesser.rankFirstAlgo, test.greater.rankFirstAlgo},
+				{test.lesser.rankSecondAlgo, test.greater.rankSecondAlgo},
+			},
 		}
 		if !podsWithRanks.Less(0, 1) {
-			t.Errorf("expected pod %q with rank %v to be less than %q with rank %v", podsWithRanks.Pods[0].Name, podsWithRanks.Rank[0], podsWithRanks.Pods[1].Name, podsWithRanks.Rank[1])
+			t.Errorf("expected pod %q with rank %v to be less than %q with rank %v", podsWithRanks.Pods[0].Name, podsWithRanks.Ranks[0][0], podsWithRanks.Pods[1].Name, podsWithRanks.Ranks[0][1])
 		}
 		if podsWithRanks.Less(1, 0) {
-			t.Errorf("expected pod %q with rank %v not to be less than %v with rank %v", podsWithRanks.Pods[1].Name, podsWithRanks.Rank[1], podsWithRanks.Pods[0].Name, podsWithRanks.Rank[0])
+			t.Errorf("expected pod %q with rank %v not to be less than %v with rank %v", podsWithRanks.Pods[1].Name, podsWithRanks.Ranks[0][1], podsWithRanks.Pods[0].Name, podsWithRanks.Ranks[0][0])
 		}
 	}
 }
