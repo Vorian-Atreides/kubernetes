@@ -126,7 +126,8 @@ require (
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/sys v0.0.0-20191022100944-742c48ecaeb7
 	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4
-	golang.org/x/tools v0.0.0-20190920225731-5eefd052ad72
+	golang.org/x/tools v0.0.0-20200227200655-6862ededa516
+	golang.org/x/tools/gopls v0.3.3 // indirect
 	gonum.org/v1/gonum v0.6.2
 	gonum.org/v1/netlib v0.0.0-20190331212654-76723241ea4e // indirect
 	google.golang.org/api v0.6.1-0.20190607001116-5213b8090861
@@ -136,7 +137,7 @@ require (
 	gopkg.in/yaml.v2 v2.2.8
 	gotest.tools v2.2.0+incompatible
 	gotest.tools/gotestsum v0.3.5
-	honnef.co/go/tools v0.0.1-2019.2.2
+	honnef.co/go/tools v0.0.1-2020.1.3
 	k8s.io/api v0.0.0
 	k8s.io/apiextensions-apiserver v0.0.0
 	k8s.io/apimachinery v0.0.0

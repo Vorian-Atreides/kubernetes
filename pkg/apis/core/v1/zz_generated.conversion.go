@@ -2948,7 +2948,15 @@ func Convert_core_ContainerPort_To_v1_ContainerPort(in *core.ContainerPort, out 
 
 func autoConvert_v1_ContainerState_To_core_ContainerState(in *v1.ContainerState, out *core.ContainerState, s conversion.Scope) error {
 	out.Waiting = (*core.ContainerStateWaiting)(unsafe.Pointer(in.Waiting))
-	out.Running = (*core.ContainerStateRunning)(unsafe.Pointer(in.Running))
+	if in.Running != nil {
+		in, out := &in.Running, &out.Running
+		*out = new(core.ContainerStateRunning)
+		if err := Convert_v1_ContainerStateRunning_To_core_ContainerStateRunning(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Running = nil
+	}
 	out.Terminated = (*core.ContainerStateTerminated)(unsafe.Pointer(in.Terminated))
 	return nil
 }
@@ -2960,7 +2968,15 @@ func Convert_v1_ContainerState_To_core_ContainerState(in *v1.ContainerState, out
 
 func autoConvert_core_ContainerState_To_v1_ContainerState(in *core.ContainerState, out *v1.ContainerState, s conversion.Scope) error {
 	out.Waiting = (*v1.ContainerStateWaiting)(unsafe.Pointer(in.Waiting))
-	out.Running = (*v1.ContainerStateRunning)(unsafe.Pointer(in.Running))
+	if in.Running != nil {
+		in, out := &in.Running, &out.Running
+		*out = new(v1.ContainerStateRunning)
+		if err := Convert_core_ContainerStateRunning_To_v1_ContainerStateRunning(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Running = nil
+	}
 	out.Terminated = (*v1.ContainerStateTerminated)(unsafe.Pointer(in.Terminated))
 	return nil
 }
@@ -2972,7 +2988,7 @@ func Convert_core_ContainerState_To_v1_ContainerState(in *core.ContainerState, o
 
 func autoConvert_v1_ContainerStateRunning_To_core_ContainerStateRunning(in *v1.ContainerStateRunning, out *core.ContainerStateRunning, s conversion.Scope) error {
 	out.StartedAt = in.StartedAt
-	out.DownscalingIndex = in.DownscalingIndex
+	out.DownscalingIndex = uint32(in.DownscalingIndex)
 	return nil
 }
 
@@ -2983,7 +2999,7 @@ func Convert_v1_ContainerStateRunning_To_core_ContainerStateRunning(in *v1.Conta
 
 func autoConvert_core_ContainerStateRunning_To_v1_ContainerStateRunning(in *core.ContainerStateRunning, out *v1.ContainerStateRunning, s conversion.Scope) error {
 	out.StartedAt = in.StartedAt
-	out.DownscalingIndex = in.DownscalingIndex
+	out.DownscalingIndex = int32(in.DownscalingIndex)
 	return nil
 }
 
@@ -6113,10 +6129,40 @@ func autoConvert_v1_PodStatus_To_core_PodStatus(in *v1.PodStatus, out *core.PodS
 	// WARNING: in.PodIP requires manual conversion: does not exist in peer-type
 	out.PodIPs = *(*[]core.PodIP)(unsafe.Pointer(&in.PodIPs))
 	out.StartTime = (*metav1.Time)(unsafe.Pointer(in.StartTime))
-	out.InitContainerStatuses = *(*[]core.ContainerStatus)(unsafe.Pointer(&in.InitContainerStatuses))
-	out.ContainerStatuses = *(*[]core.ContainerStatus)(unsafe.Pointer(&in.ContainerStatuses))
+	if in.InitContainerStatuses != nil {
+		in, out := &in.InitContainerStatuses, &out.InitContainerStatuses
+		*out = make([]core.ContainerStatus, len(*in))
+		for i := range *in {
+			if err := Convert_v1_ContainerStatus_To_core_ContainerStatus(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.InitContainerStatuses = nil
+	}
+	if in.ContainerStatuses != nil {
+		in, out := &in.ContainerStatuses, &out.ContainerStatuses
+		*out = make([]core.ContainerStatus, len(*in))
+		for i := range *in {
+			if err := Convert_v1_ContainerStatus_To_core_ContainerStatus(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.ContainerStatuses = nil
+	}
 	out.QOSClass = core.PodQOSClass(in.QOSClass)
-	out.EphemeralContainerStatuses = *(*[]core.ContainerStatus)(unsafe.Pointer(&in.EphemeralContainerStatuses))
+	if in.EphemeralContainerStatuses != nil {
+		in, out := &in.EphemeralContainerStatuses, &out.EphemeralContainerStatuses
+		*out = make([]core.ContainerStatus, len(*in))
+		for i := range *in {
+			if err := Convert_v1_ContainerStatus_To_core_ContainerStatus(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.EphemeralContainerStatuses = nil
+	}
 	return nil
 }
 
@@ -6130,9 +6176,39 @@ func autoConvert_core_PodStatus_To_v1_PodStatus(in *core.PodStatus, out *v1.PodS
 	out.PodIPs = *(*[]v1.PodIP)(unsafe.Pointer(&in.PodIPs))
 	out.StartTime = (*metav1.Time)(unsafe.Pointer(in.StartTime))
 	out.QOSClass = v1.PodQOSClass(in.QOSClass)
-	out.InitContainerStatuses = *(*[]v1.ContainerStatus)(unsafe.Pointer(&in.InitContainerStatuses))
-	out.ContainerStatuses = *(*[]v1.ContainerStatus)(unsafe.Pointer(&in.ContainerStatuses))
-	out.EphemeralContainerStatuses = *(*[]v1.ContainerStatus)(unsafe.Pointer(&in.EphemeralContainerStatuses))
+	if in.InitContainerStatuses != nil {
+		in, out := &in.InitContainerStatuses, &out.InitContainerStatuses
+		*out = make([]v1.ContainerStatus, len(*in))
+		for i := range *in {
+			if err := Convert_core_ContainerStatus_To_v1_ContainerStatus(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.InitContainerStatuses = nil
+	}
+	if in.ContainerStatuses != nil {
+		in, out := &in.ContainerStatuses, &out.ContainerStatuses
+		*out = make([]v1.ContainerStatus, len(*in))
+		for i := range *in {
+			if err := Convert_core_ContainerStatus_To_v1_ContainerStatus(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.ContainerStatuses = nil
+	}
+	if in.EphemeralContainerStatuses != nil {
+		in, out := &in.EphemeralContainerStatuses, &out.EphemeralContainerStatuses
+		*out = make([]v1.ContainerStatus, len(*in))
+		for i := range *in {
+			if err := Convert_core_ContainerStatus_To_v1_ContainerStatus(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.EphemeralContainerStatuses = nil
+	}
 	return nil
 }
 

@@ -107,7 +107,7 @@ type Manager interface {
 
 	// SetContainerDownscaliness updates the cached container status with the given index, and
 	// triggers a status update.
-	SetContainerDownscaliness(podUID types.UID, containerID kubecontainer.ContainerID, index uint32) 
+	SetContainerDownscaliness(podUID types.UID, containerID kubecontainer.ContainerID, index int32) 
 
 	// TerminatePod resets the container status for the provided pod to terminated and triggers
 	// a status update.
@@ -201,7 +201,7 @@ func (m *manager) SetPodStatus(pod *v1.Pod, status v1.PodStatus) {
 	m.updateStatusInternal(pod, status, pod.DeletionTimestamp != nil)
 }
 
-func (m *manager) SetContainerDownscaliness(podUID types.UID, containerID kubecontainer.ContainerID, index uint32) {
+func (m *manager) SetContainerDownscaliness(podUID types.UID, containerID kubecontainer.ContainerID, index int32) {
 	m.podStatusesLock.Lock()
 	defer m.podStatusesLock.Unlock()
 

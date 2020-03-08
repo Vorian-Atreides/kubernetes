@@ -2338,7 +2338,7 @@ type ContainerStateRunning struct {
 	StartedAt metav1.Time `json:"startedAt,omitempty" protobuf:"bytes,1,opt,name=startedAt"`
 	// Index used to select the best candidate(s) to be downscaled among a workload
 	// +optional
-	DownscalingIndex uint32 `json:"downscalingIndex,omitempty" protobuf:"uint32,2,opt,name=downscalingIndex"`
+	DownscalingIndex int32 `json:"downscalingIndex,omitempty" protobuf:"int32,2,opt,name=downscalingIndex"`
 }
 
 // ContainerStateTerminated is a terminated state of a container.

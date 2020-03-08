@@ -339,8 +339,8 @@ func (m *manager) updateDownscaling() {
 		return
 	}
 
-	var index uint64
-	i, err := strconv.ParseUint(update.Output, 10, 32)
+	var index int32
+	i, err := strconv.ParseInt(update.Output, 10, 32)
 	switch {
 	case err != nil:
 		klog.Errorf("The downscaling index should be an integer in [0, 100], %v - %v",
@@ -348,10 +348,9 @@ func (m *manager) updateDownscaling() {
 		return
 	// Be lenient and cap the index to its maximum, it shouldn't be a fatal user error.
 	case i > 100:
-		i = 100
-		fallthrough
-	default:
-		index = i
+		index = 100
+	case i > 0:
+		index = int32(i)
 	}
-	m.statusManager.SetContainerDownscaliness(update.PodUID, update.ContainerID, uint32(index))
+	m.statusManager.SetContainerDownscaliness(update.PodUID, update.ContainerID, index)
 }
